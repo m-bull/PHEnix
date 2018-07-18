@@ -106,7 +106,6 @@ class Minimap2Mapper(Mapper):
                 version = output.rstrip()
             except Exception:
                 version = "n/a"
-        print version
         return version
 
     def get_info(self, plain=False):
