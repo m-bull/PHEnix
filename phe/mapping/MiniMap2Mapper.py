@@ -17,7 +17,7 @@ from phe.mapping import Mapper
 class Minimap2Mapper(Mapper):
     '''Minimap2 mapper developed by Heng Li.'''
 
-    _default_options = "-x sr -a"
+    _default_options = "-t 1"
     """Default options for the mapper."""
     _cmd = "minimap2"
     """Command for calling mapper."""
@@ -65,7 +65,7 @@ class Minimap2Mapper(Mapper):
 #                logging.error("Computing index has failed. Abort")
 #                return False
 
-        cmd = r"%(cmd)s -R '@RG\tID:%(sample_name)s\tSM:%(sample_name)s' %(extra_options)s %(ref)s %(r1)s %(r2)s" % d
+        cmd = r"%(cmd)s -x sr -a -R '@RG\tID:%(sample_name)s\tSM:%(sample_name)s' %(extra_options)s %(ref)s %(r1)s %(r2)s" % d
         logging.debug("CMD: %s", cmd)
 
         p = Popen(shlex.split(cmd), stdout=d["out_sam"], stderr=subprocess.PIPE)
@@ -103,9 +103,10 @@ class Minimap2Mapper(Mapper):
                 version = "n/a"
         else:
             try:
-                version = output
+                version = output.rstrip()
             except Exception:
                 version = "n/a"
+        print version
         return version
 
     def get_info(self, plain=False):
