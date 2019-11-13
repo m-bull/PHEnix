@@ -10,7 +10,7 @@ import yaml
 
 from phe.annotations import available_annotators, make_annotators
 from phe.mapping.mapping_factory import factory as map_fac, available_mappers
-from phe.variant import VariantSet
+from phe.variant import VariantSet, fill_missing_vcf_positions
 from phe.variant.variant_factory import factory as variant_fac, \
     available_callers
 from phe.variant_filters import available_filters, str_to_filters, make_filters
