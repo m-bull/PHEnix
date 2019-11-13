@@ -229,6 +229,10 @@ def main(args):
     else:
         vcf_file = None
 
+    if vcf_file:
+        logging.info("Filling missing positions in vcf")
+        fill_missing_vcf_positions(vcf_file,  reference=args["reference"])
+
     annotators_metadata = []
     if args["annotators"] and vcf_file:
         logging.info("Annotating")

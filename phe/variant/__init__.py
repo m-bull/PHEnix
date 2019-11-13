@@ -31,6 +31,7 @@ It should appear in the list of available callers.
 """
 import abc
 from collections import OrderedDict, namedtuple
+import csv
 import gzip
 import logging
 import operator
@@ -527,3 +528,71 @@ class VariantCaller(PHEMetaData):
         """Check if the command can run."""
         if self.get_version() == "n/a":
             raise Exception("%s is not available in your PATH." % self.name)
+
+
+
+def fill_missing_vcf_positions(vcf_file, reference):
+    mandatory_columns = ["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT" ]
+
+    metalines = []
+    headerlines = []
+    samplelines = []
+
+    with open(vcf_file) as vcffile:
+        vcf_reader = csv.reader(vcffile, delimiter="\t")
+        for row in vcf_reader:
+            if row[0].startswith("##"):
+                metalines.append("\t".join(row))
+            elif row[0].startswith("#CHROM"):
+                for header in row:
+                    headerlines.append(header)
+            else:
+                samplelines.append(dict(zip(headerlines, row)))
+
+
+    fasta_dict = SeqIO.to_dict(SeqIO.parse(reference, "fasta"))
+
+    _pos = 1
+
+    all_pos_vcf_list = []
+
+    for record in samplelines:
+        pos = int(record.get("POS"))
+        chrom = record.get("#CHROM")
+
+        while _pos <= pos:
+            if _pos != pos:
+                base = fasta_dict.get(record.get("#CHROM")).seq[_pos-1]         
+                missing_data = "."
+                missing_gt = "./."
+                missing_record = { "#CHROM": chrom,
+                                      "POS": _pos,
+                                       "ID": missing_data,
+                                      "REF": base,
+                                      "ALT": missing_data,
+                                     "QUAL": missing_data,
+                                   "FILTER": missing_data,
+                                     "INFO": missing_data,
+                                   "FORMAT": "GT" }
+                
+                for key, value in record.iteritems():
+                    if key not in mandatory_columns:
+                        sample_data = { key: missing_gt }
+                        missing_record.update(sample_data)
+                
+                all_pos_vcf_list.append(missing_record)
+                
+            else:
+                all_pos_vcf_list.append(record)
+        
+            _pos += 1
+
+    with open(vcf_file, "w") as vcfout:
+        for metaline in metalines:
+            vcfout.write(metaline + "\n")
+
+        writer = csv.DictWriter(vcfout, fieldnames=headerlines, delimiter="\t")
+        writer.writeheader()
+        for record in all_pos_vcf_list:
+            writer.writerow(record)
+

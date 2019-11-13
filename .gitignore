@@ -5,3 +5,6 @@
 /cover/
 docs/_build
 .settings
+data**
+venv**
+run.sh
